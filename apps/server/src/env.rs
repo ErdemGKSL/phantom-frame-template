@@ -22,5 +22,8 @@ impl Into<Environment> for &str {
 }
 
 pub fn get_enviroment() -> Environment {
-    std::env::var("PROFILE").unwrap_or_default().as_str().into()
+    #[cfg(debug_assertions)]
+    return Environment::Development;
+    #[cfg(not(debug_assertions))]
+    return Environment::Production;
 }
