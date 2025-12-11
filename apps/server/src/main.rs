@@ -2,7 +2,6 @@ use crate::env::get_enviroment;
 use tracing::info;
 use tracing_subscriber;
 
-#[cfg(not(debug_assertions))]
 mod embed;
 mod env;
 mod server;
@@ -39,6 +38,9 @@ async fn main() {
     
     info!("Frontend port: {}", frontend_port);
     info!("Server port: {}", port);
+
+    #[cfg(debug_assertions)]
+    let _dev_server = embed::DevServer::start().expect("Failed to start dev server");
 
     #[cfg(not(debug_assertions))]
     {

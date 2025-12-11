@@ -825,22 +825,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "phantom-frame-template"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "dotenv",
- "phantom-frame",
- "rust-embed",
- "serde",
- "tokio",
- "tower 0.4.13",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1183,6 +1167,22 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "dotenv",
+ "phantom-frame",
+ "rust-embed",
+ "serde",
+ "tokio",
+ "tower 0.4.13",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
