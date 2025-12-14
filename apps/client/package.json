@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"bundle": "bun build --bytecode --outfile=./dist/bundle.js ./build/index.js",
+		"bundle": "bun build --target=bun --minify --outfile=./dist/bundle.js ./build/index.js",
 		"compile": "bun build --compile --minify --outfile=./dist/client ./build/index.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
