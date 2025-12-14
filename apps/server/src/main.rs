@@ -11,6 +11,12 @@ pub struct AppState {
     pub refresh_frontend: phantom_frame::cache::RefreshTrigger,
 }
 
+fn find_available_port() -> std::io::Result<u16> {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+    let port = listener.local_addr()?.port();
+    Ok(port)
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
@@ -28,7 +34,9 @@ async fn main() {
 
     let frontend_port = match environment {
         env::Environment::Development => 5173,
-        env::Environment::Production => 13472,
+        env::Environment::Production => {
+            find_available_port().expect("Failed to find available port for frontend")
+        }
     };
 
     let port = std::env::var("PORT")
@@ -44,7 +52,7 @@ async fn main() {
 
     #[cfg(not(debug_assertions))]
     {
-        embed::run_frontend_binary().expect("Failed to run frontend binary");
+        embed::run_frontend(frontend_port).expect("Failed to start frontend");
     }
 
     #[cfg(not(debug_assertions))]

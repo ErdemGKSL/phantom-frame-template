@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && bun build.js",
-		"compile": "bun build --compile --outfile=build/client ./build/index.js",
+		"bundle": "bun build --target=bun --outfile=./dist/bundle.js ./build/index.js",
+		"compile": "bun build --compile --outfile=./dist/client ./build/index.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
