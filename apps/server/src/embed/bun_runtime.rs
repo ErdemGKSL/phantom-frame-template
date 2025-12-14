@@ -1,6 +1,10 @@
 use anyhow::{Context, Result};
 use std::io::{BufRead, BufReader, Write};
+use std::net::TcpStream;
 use std::process::{Command, Stdio};
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::thread;
+use std::time::{Duration, Instant};
 use tracing::info;
 
 const BUNDLE_JS: &[u8] = include_bytes!("../../../client/dist/bundle.js");
@@ -66,6 +70,9 @@ pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
 
     info!("Frontend (bun) started with PID: {:?}", child.id());
 
+    let ready = Arc::new(AtomicBool::new(false));
+    let ready_clone = ready.clone();
+
     // Stream logs in background; keep process running after dropping handle.
     if let Some(stdout) = child.stdout.take() {
         std::thread::spawn(move || {
@@ -73,6 +80,9 @@ pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
             for line in reader.lines().flatten() {
                 let cleaned = strip_ansi_codes(&line);
                 if !cleaned.trim().is_empty() {
+                    if cleaned.contains("Listening on") {
+                        ready_clone.store(true, Ordering::SeqCst);
+                    }
                     tracing::info!(target: "frontend", "{}", cleaned);
                 }
             }
@@ -90,6 +100,25 @@ pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
             }
         });
     }
+
+    info!("Waiting for frontend to be ready on port {}...", frontend_port);
+    let start = Instant::now();
+    let timeout = Duration::from_secs(30);
+    
+    // Wait for either the "Listening on" log or port to be available
+    while !ready.load(Ordering::SeqCst) && start.elapsed() < timeout {
+        if TcpStream::connect(("127.0.0.1", frontend_port)).is_ok() {
+            info!("Frontend port {} is now available", frontend_port);
+            break;
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
+    
+    if start.elapsed() >= timeout {
+        anyhow::bail!("Frontend failed to start within {} seconds", timeout.as_secs());
+    }
+    
+    info!("Frontend is ready after {:?}", start.elapsed());
 
     Ok(())
 }

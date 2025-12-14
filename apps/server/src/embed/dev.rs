@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use std::io::{BufRead, BufReader};
 use std::process::{Child, Command, Stdio};
+use std::sync::mpsc;
 use tracing::{info, warn};
 
 fn strip_ansi_codes(s: &str) -> String {
@@ -26,7 +27,7 @@ fn strip_ansi_codes(s: &str) -> String {
     result
 }
 
-pub fn run_dev_server() -> Result<Child> {
+pub fn run_dev_server() -> Result<(Child, mpsc::Receiver<()>)> {
     info!("Starting development server with bun run dev");
 
     let client_dir = std::env::current_dir()
@@ -49,14 +50,20 @@ pub fn run_dev_server() -> Result<Child> {
 
     info!("Development server started with PID: {:?}", child.id());
 
+    let (tx, rx) = mpsc::channel();
+
     // Spawn threads to read and log stdout/stderr
     if let Some(stdout) = child.stdout.take() {
+        let tx_clone = tx.clone();
         std::thread::spawn(move || {
             let reader = BufReader::new(stdout);
             for line in reader.lines() {
                 if let Ok(line) = line {
                     let cleaned = strip_ansi_codes(&line);
                     if !cleaned.trim().is_empty() {
+                        if cleaned.contains("Local:") {
+                            tx_clone.send(()).ok();
+                        }
                         tracing::info!(target: "dev-frontend", "{}", cleaned);
                     }
                 }
@@ -78,7 +85,7 @@ pub fn run_dev_server() -> Result<Child> {
         });
     }
 
-    Ok(child)
+    Ok((child, rx))
 }
 
 pub struct DevServer {
@@ -87,7 +94,11 @@ pub struct DevServer {
 
 impl DevServer {
     pub fn start() -> Result<Self> {
-        let child = run_dev_server()?;
+        let (child, rx) = run_dev_server()?;
+        
+        // Wait for the dev server to log "Local:"
+        rx.recv().ok();
+        
         Ok(Self { child: Some(child) })
     }
 }

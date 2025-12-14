@@ -1,5 +1,9 @@
 use std::io::{BufRead, BufReader, Write};
+use std::net::TcpStream;
 use std::process::{Command, Stdio};
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::thread;
+use std::time::{Duration, Instant};
 use tracing;
 use anyhow::{Context, Result};
 
@@ -50,7 +54,8 @@ pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
     
     tracing::info!("Frontend binary started at {:?}", exe_path);
     
-    tracing::info!("Frontend binary started at {:?}", exe_path);
+    let ready = Arc::new(AtomicBool::new(false));
+    let ready_clone = ready.clone();
     
     // Spawn threads to read and log stdout/stderr
     if let Some(stdout) = child.stdout.take() {
@@ -58,6 +63,9 @@ pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
             let reader = BufReader::new(stdout);
             for line in reader.lines() {
                 if let Ok(line) = line {
+                    if line.contains("Listening on") {
+                        ready_clone.store(true, Ordering::SeqCst);
+                    }
                     tracing::info!(target: "frontend", "{}", line);
                 }
             }
@@ -74,6 +82,25 @@ pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
             }
         });
     }
+    
+    tracing::info!("Waiting for frontend to be ready on port {}...", frontend_port);
+    let start = Instant::now();
+    let timeout = Duration::from_secs(30);
+    
+    // Wait for either the "Listening on" log or port to be available
+    while !ready.load(Ordering::SeqCst) && start.elapsed() < timeout {
+        if TcpStream::connect(("127.0.0.1", frontend_port)).is_ok() {
+            tracing::info!("Frontend port {} is now available", frontend_port);
+            break;
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
+    
+    if start.elapsed() >= timeout {
+        anyhow::bail!("Frontend failed to start within {} seconds", timeout.as_secs());
+    }
+    
+    tracing::info!("Frontend is ready after {:?}", start.elapsed());
     
     Ok(())
 }
