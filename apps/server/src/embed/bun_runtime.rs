@@ -7,6 +7,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 use tracing::info;
 
+use super::static_assets::extract_client_assets;
+
 const BUNDLE_JS: &[u8] = include_bytes!("../../../client/dist/bundle.js");
 
 fn get_project_temp_dir() -> std::path::PathBuf {
@@ -46,6 +48,9 @@ pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
     let temp_dir = get_project_temp_dir();
     std::fs::create_dir_all(&temp_dir)
         .context("Failed to create bundle directory")?;
+
+    extract_client_assets(&temp_dir)
+        .context("Failed to extract built client assets for bun runtime")?;
 
     let bundle_path = temp_dir.join("bundle.js");
     

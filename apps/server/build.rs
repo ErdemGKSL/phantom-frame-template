@@ -39,9 +39,11 @@ fn main() {
     }
 
     println!("cargo:rerun-if-changed=../client/src");
+    println!("cargo:rerun-if-changed=../client/static");
     println!("cargo:rerun-if-changed=../client/package.json");
     println!("cargo:rerun-if-changed=../client/vite.config.ts");
     println!("cargo:rerun-if-changed=../client/svelte.config.js");
+    println!("cargo:rerun-if-changed=../client/build/client");
     println!("cargo:rerun-if-changed=../client/dist/client");
     println!("cargo:rerun-if-changed=../client/dist/bundle.js");
 

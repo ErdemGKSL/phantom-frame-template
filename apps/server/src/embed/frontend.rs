@@ -7,6 +7,8 @@ use std::time::{Duration, Instant};
 use tracing;
 use anyhow::{Context, Result};
 
+use super::static_assets::extract_client_assets;
+
 #[cfg(target_os = "windows")]
 const APP_BINARY: &[u8] = include_bytes!("../../../client/dist/client.exe");
 
@@ -18,6 +20,8 @@ pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
     let project_name = env!("WORKSPACE_NAME");
     let temp_dir = std::env::temp_dir().join(project_name);
     std::fs::create_dir_all(&temp_dir)?;
+    extract_client_assets(&temp_dir)
+        .context("Failed to extract built client assets for compiled frontend")?;
     
     #[cfg(target_os = "windows")]
     let exe_path = temp_dir.join("client.exe");

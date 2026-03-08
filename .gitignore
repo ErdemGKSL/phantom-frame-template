@@ -20,3 +20,4 @@ deploy/
 # Added by cargo
 
 /target
+.opencode
