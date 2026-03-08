@@ -2,6 +2,8 @@
 resolver = "3"
 members = ["apps/server"]
 
+[workspace.metadata]
+project_name = "phantom-frame-template"
+
 [workspace.package]
-name = "phantom-frame-template"
 version = "0.1.0"

@@ -5,14 +5,14 @@ fn main() {
     // Tell Rust's `check-cfg` system that `cfg(bun_compile)` is an expected custom cfg.
     println!("cargo:rustc-check-cfg=cfg(bun_compile)");
     
-    // Read workspace package name from root Cargo.toml
+    // Read workspace project name from root Cargo.toml metadata
     let workspace_toml = std::fs::read_to_string("../../Cargo.toml")
         .expect("Failed to read workspace Cargo.toml");
     let workspace_name = workspace_toml
         .lines()
-        .skip_while(|line| !line.starts_with("[workspace.package]"))
+        .skip_while(|line| !line.starts_with("[workspace.metadata]"))
         .skip(1)
-        .find(|line| line.trim().starts_with("name"))
+        .find(|line| line.trim().starts_with("project_name"))
         .and_then(|line| line.split('=').nth(1))
         .map(|s| s.trim().trim_matches('"').to_string())
         .unwrap_or_else(|| "phantom-frame-template".to_string());
