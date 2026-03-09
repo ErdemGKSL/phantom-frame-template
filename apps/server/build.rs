@@ -192,6 +192,17 @@ fn main() {
         "cargo:warning=Building SvelteKit client (adapter={})...",
         svelte_adapter
     );
+
+    let install_success = Command::new(pnpm_bin())
+        .arg("install")
+        .current_dir(client_dir)
+        .status()
+        .expect("Failed to run pnpm install");
+
+    if !install_success.success() {
+        panic!("Client install failed");
+    }
+
     let build_status = Command::new(pnpm_bin())
         .arg("run")
         .arg("build")
