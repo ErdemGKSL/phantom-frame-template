@@ -32,7 +32,7 @@ apps/server/src/
 │   └── mod.rs       — Custom API routes (see below)
 └── embed/
     ├── mod.rs       — Conditional re-exports based on cfg flags
-    ├── dev.rs       — Dev mode: spawns `bun run dev` and waits for Vite to be ready
+    ├── dev.rs       — Dev mode: spawns `pnpm run dev` and waits for Vite to be ready
     ├── bun_runtime.rs   — Release (default): embeds dist/bundle.js, runs it via bun
     ├── frontend.rs      — Release (bun_compile feature): embeds compiled binary, spawns it
     └── static_assets.rs — Release: embeds build/client/ via rust-embed as a Tower layer
@@ -102,7 +102,7 @@ To add a new route:
 
 ## Frontend (`apps/client/`)
 
-**Framework:** SvelteKit 2 + Svelte 5, built with Vite 7, served via `svelte-adapter-bun`.
+**Framework:** SvelteKit 2 + Svelte 5, built with Vite 7, served via `svelte-adapter-bun` or `@sveltejs/adapter-node`.
 
 ```
 apps/client/src/
@@ -121,13 +121,13 @@ The client communicates with the Rust server via plain `fetch` calls to `/api/*`
 ```
 cargo build --release
   └─ build.rs:
-       bun run build   → SvelteKit build → apps/client/build/
+       pnpm run build   → SvelteKit build → apps/client/build/
        bun run bundle  → bun bundles build/index.js → dist/bundle.js
        (bun_compile feature only)
        bun run compile → dist/client binary
 ```
 
-In development (`cargo run`), the build script is skipped and the Rust binary spawns `bun run dev` automatically.
+In development (`cargo run`), the build script is skipped and the Rust binary spawns `pnpm run dev` automatically.
 
 ---
 

@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
 		? {
 			proxy: {
 				'/api': {
-					target: 'http://localhost:3000',
+					target: process.env.PUBLIC_RUST_SERVER_PORT ? `http://localhost:${process.env.PUBLIC_RUST_SERVER_PORT}` :'http://localhost:3030',
 					changeOrigin: true,
 					secure: false
 				}

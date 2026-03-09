@@ -44,11 +44,11 @@ struct Runner {
 /// The first one whose executable is found in PATH wins.
 #[cfg(node)]
 const NODE_RUNNERS: &[Runner] = &[
-    // Node 22+ built-in script runner (no extra tool required)
+    // pnpm — common alternative
     Runner {
-        program: "node",
-        args: &["--run"],
-        label: "node --run dev",
+        program: "pnpm",
+        args: &["run"],
+        label: "pnpm run dev",
     },
     // npm is always available alongside node
     Runner {
@@ -56,11 +56,11 @@ const NODE_RUNNERS: &[Runner] = &[
         args: &["run"],
         label: "npm run dev",
     },
-    // pnpm — common alternative
+    // Node 22+ built-in script runner (no extra tool required)
     Runner {
-        program: "pnpm",
-        args: &["run"],
-        label: "pnpm run dev",
+        program: "node",
+        args: &["--run"],
+        label: "node --run dev",
     },
     // npx as last resort (runs vite directly without a package manager)
     Runner {
