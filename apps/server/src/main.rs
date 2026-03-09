@@ -9,6 +9,7 @@ use tracing_subscriber;
 mod api;
 mod embed;
 mod env;
+mod middleware;
 mod server;
 
 #[derive(Clone)]

@@ -4,7 +4,7 @@ use phantom_frame::CreateProxyConfig;
 use std::sync::Arc;
 use tracing::{info, instrument};
 
-use crate::{api, env::Environment, AppState};
+use crate::{api, env::Environment, middleware::RedirectTrailingSlashLayer, AppState};
 
 #[instrument(skip_all, fields(port = %port, frontend_port = %frontend_port))]
 pub async fn start_server(
@@ -23,13 +23,15 @@ pub async fn start_server(
         .merge(api::api_router())
         .merge(create_proxy_router(frontend_port, environment).await?)
         .layer(assets_layer)
-        .layer(Extension(state));
+        .layer(Extension(state))
+        .layer(RedirectTrailingSlashLayer);
 
     #[cfg(debug_assertions)]
     let app = Router::new()
         .merge(api::api_router())
         .merge(create_proxy_router(frontend_port, environment).await?)
-        .layer(Extension(state));
+        .layer(Extension(state))
+        .layer(RedirectTrailingSlashLayer);
 
     // Start server
     let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port))
