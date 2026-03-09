@@ -5,8 +5,10 @@ edition = "2024"
 default-run = "server"
 
 [features]
-default = []
-bun_compile = []
+default = ["node"]
+bun     = []
+node    = []
+compile = ["bun"]  # enabling compile automatically enables bun; requires bun at build time
 
 [dependencies]
 anyhow = "1.0.100"
