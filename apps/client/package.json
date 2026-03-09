@@ -1,11 +1,14 @@
 {
-	"name": "client2",
+	"name": "client",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"bundle": "bun build --target=bun --minify --outfile=./dist/bundle.js ./build/index.js",
+		"bundle:node": "bun build --target=node --minify --outfile=./dist/bundle.node.js ./build/index.js",
+		"compile": "bun build --compile --minify --outfile=./dist/client ./build/index.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
