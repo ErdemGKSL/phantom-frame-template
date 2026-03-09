@@ -4,7 +4,7 @@ use phantom_frame::CreateProxyConfig;
 use std::sync::Arc;
 use tracing::{info, instrument};
 
-use crate::{env::Environment, AppState};
+use crate::{api, env::Environment, AppState};
 
 #[instrument(skip_all, fields(port = %port, frontend_port = %frontend_port))]
 pub async fn start_server(
@@ -20,12 +20,14 @@ pub async fn start_server(
     // Create Axum router with proxy
     #[cfg(not(debug_assertions))]
     let app = Router::new()
+        .merge(api::api_router())
         .merge(create_proxy_router(frontend_port, environment).await?)
         .layer(assets_layer)
         .layer(Extension(state));
 
     #[cfg(debug_assertions)]
     let app = Router::new()
+        .merge(api::api_router())
         .merge(create_proxy_router(frontend_port, environment).await?)
         .layer(Extension(state));
 
@@ -45,7 +47,7 @@ async fn create_app_state(frontend_port: u16, environment: Environment) -> Resul
     let (_, refresh_frontend) =
         phantom_frame::create_proxy(create_proxy_config(frontend_port, environment)?);
 
-    Ok(AppState { refresh_frontend })
+    Ok(AppState::new(refresh_frontend))
 }
 
 #[instrument(skip_all, fields(frontend_port = %frontend_port))]

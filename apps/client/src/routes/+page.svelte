@@ -1,23 +1,38 @@
-<script>
-    import { browser } from "$app/environment";
+<script lang="ts">
+    import { onMount } from "svelte";
 
-    let incr = $state(0);
+    let counter = $state(0);
 
-    if (browser) {
-        setInterval(() => {
-            incr += 1;
-        }, 1000);
+    async function fetchCounter() {
+        const res = await fetch("/api/counter");
+        const data = await res.json();
+        counter = data.value;
     }
-</script>
 
+    async function increment() {
+        const res = await fetch("/api/increment");
+        const data = await res.json();
+        counter = data.value;
+    }
+
+    onMount(fetchCounter);
+</script>
 
 <h1>Welcome to SvelteKit</h1>
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
-<p>Counter: {incr}</p>
+<p>Counter: {counter}</p>
+<button onclick={increment}>Increment</button>
 
 <style>
     h1 {
         font-size: 2em;
         color: red;
+    }
+
+    button {
+        margin-top: 1rem;
+        padding: 0.5rem 1.25rem;
+        font-size: 1rem;
+        cursor: pointer;
     }
 </style>

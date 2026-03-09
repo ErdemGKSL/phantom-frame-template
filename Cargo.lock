@@ -1203,6 +1203,7 @@ dependencies = [
  "phantom-frame",
  "rust-embed",
  "serde",
+ "serde_json",
  "tokio",
  "tower",
  "tracing",

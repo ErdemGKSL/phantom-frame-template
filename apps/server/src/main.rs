@@ -1,7 +1,12 @@
 use crate::env::get_enviroment;
+use std::sync::{
+    Arc,
+    atomic::AtomicUsize,
+};
 use tracing::info;
 use tracing_subscriber;
 
+mod api;
 mod embed;
 mod env;
 mod server;
@@ -9,6 +14,16 @@ mod server;
 #[derive(Clone)]
 pub struct AppState {
     pub refresh_frontend: phantom_frame::cache::RefreshTrigger,
+    pub counter: Arc<AtomicUsize>,
+}
+
+impl AppState {
+    pub fn new(refresh_frontend: phantom_frame::cache::RefreshTrigger) -> Self {
+        Self {
+            refresh_frontend,
+            counter: Arc::new(AtomicUsize::new(0)),
+        }
+    }
 }
 
 fn find_available_port() -> std::io::Result<u16> {
