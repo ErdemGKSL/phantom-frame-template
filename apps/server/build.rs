@@ -6,6 +6,7 @@ use std::process::Command;
 fn pnpm_bin() -> &'static str {
     if cfg!(windows) {
         "pnpm.cmd"
+    } else {
         "pnpm"
     }
 }
