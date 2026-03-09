@@ -14,14 +14,18 @@ pub async fn start_server(
     #[cfg(not(debug_assertions))] assets_layer: crate::embed::AssetsLayer,
 ) -> Result<()> {
     info!("Initializing server");
-    // Create application state
-    let state = Arc::new(create_app_state(frontend_port, environment).await?);
+
+    // Create proxy once so the RefreshTrigger and the Router share the same cache.
+    let (proxy_router, refresh_frontend) =
+        phantom_frame::create_proxy(create_proxy_config(frontend_port, environment)?);
+
+    let state = Arc::new(AppState::new(refresh_frontend));
 
     // Create Axum router with proxy
     #[cfg(not(debug_assertions))]
     let app = Router::new()
         .merge(api::api_router())
-        .merge(create_proxy_router(frontend_port, environment).await?)
+        .merge(proxy_router)
         .layer(assets_layer)
         .layer(Extension(state))
         .layer(RedirectTrailingSlashLayer);
@@ -29,7 +33,7 @@ pub async fn start_server(
     #[cfg(debug_assertions)]
     let app = Router::new()
         .merge(api::api_router())
-        .merge(create_proxy_router(frontend_port, environment).await?)
+        .merge(proxy_router)
         .layer(Extension(state))
         .layer(RedirectTrailingSlashLayer);
 
@@ -41,27 +45,6 @@ pub async fn start_server(
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-#[instrument(skip_all, fields(frontend_port = %frontend_port))]
-async fn create_app_state(frontend_port: u16, environment: Environment) -> Result<AppState> {
-    info!("Creating application state");
-    let (_, refresh_frontend) =
-        phantom_frame::create_proxy(create_proxy_config(frontend_port, environment)?);
-
-    Ok(AppState::new(refresh_frontend))
-}
-
-#[instrument(skip_all, fields(frontend_port = %frontend_port))]
-pub async fn create_proxy_router(
-    frontend_port: u16,
-    environment: Environment,
-) -> Result<Router> {
-    info!("Creating proxy router");
-    let proxy_config = create_proxy_config(frontend_port, environment)?;
-    let (proxy_app, _) = phantom_frame::create_proxy(proxy_config);
-
-    Ok(proxy_app)
 }
 
 #[instrument(skip_all, fields(frontend_port = %frontend_port))]

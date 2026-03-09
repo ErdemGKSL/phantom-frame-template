@@ -7,19 +7,15 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 // without any extra configuration.
 const adapterName = process.env.SVELTE_ADAPTER ?? 'node';
 
-let adapterFactory;
-if (adapterName === 'node') {
-	const { default: nodeAdapter } = await import('@sveltejs/adapter-node');
-	adapterFactory = nodeAdapter;
-} else {
-	const { default: bunAdapter } = await import('svelte-adapter-bun');
-	adapterFactory = bunAdapter;
-}
+import { default as nodeAdapter } from '@sveltejs/adapter-node';
+import { default as bunAdapter } from 'svelte-adapter-bun';
+
+const adapter = adapterName === 'node' ? nodeAdapter() : bunAdapter();
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess(),
-	kit: { adapter: adapterFactory() }
+	kit: { adapter }
 };
 
 export default config;

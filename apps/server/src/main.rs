@@ -64,11 +64,11 @@ async fn main() {
     info!("Server port: {}", port);
 
     #[cfg(debug_assertions)]
-    let _dev_server = embed::DevServer::start().expect("Failed to start dev server");
+    let _dev_server = embed::DevServer::start(port).expect("Failed to start dev server");
 
     #[cfg(not(debug_assertions))]
     {
-        embed::run_frontend(frontend_port).expect("Failed to start frontend");
+        embed::run_frontend(frontend_port, port).expect("Failed to start frontend");
     }
 
     #[cfg(not(debug_assertions))]

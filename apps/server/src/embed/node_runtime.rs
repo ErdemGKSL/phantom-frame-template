@@ -97,6 +97,7 @@ fn spawn_and_wait(
     entry: &std::path::Path,
     temp_dir: &std::path::Path,
     frontend_port: u16,
+    rust_port: u16,
 ) -> Result<()> {
     info!("Starting frontend via node at {:?}", entry);
 
@@ -106,6 +107,7 @@ fn spawn_and_wait(
         .env("PORT", frontend_port.to_string())
         .env("HOST", "127.0.0.1")
         .env("NODE_ENV", "production")
+        .env("PUBLIC_RUST_SERVER_PORT", rust_port.to_string())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -178,7 +180,7 @@ fn spawn_and_wait(
 /// Selects the bundled strategy (Option C) when build.rs succeeded in
 /// producing `dist/bundle.node.js`, or the embedded strategy (Option A)
 /// otherwise.
-pub fn run_frontend_node(frontend_port: u16) -> Result<()> {
+pub fn run_frontend_node(frontend_port: u16, rust_port: u16) -> Result<()> {
     let temp_dir = get_project_temp_dir();
     std::fs::create_dir_all(&temp_dir).context("Failed to create temp directory")?;
 
@@ -204,7 +206,7 @@ pub fn run_frontend_node(frontend_port: u16) -> Result<()> {
             .context("Failed to write bundle.node.js")?;
         drop(file);
 
-        return spawn_and_wait(&bundle_path, &temp_dir, frontend_port);
+        return spawn_and_wait(&bundle_path, &temp_dir, frontend_port, rust_port);
     }
 
     // -----------------------------------------------------------------
@@ -264,6 +266,6 @@ pub fn run_frontend_node(frontend_port: u16) -> Result<()> {
             );
         }
 
-        spawn_and_wait(&entry, &temp_dir, frontend_port)
+        spawn_and_wait(&entry, &temp_dir, frontend_port, rust_port)
     }
 }

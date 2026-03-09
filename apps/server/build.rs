@@ -1,6 +1,12 @@
 use std::path::Path;
 use std::process::Command;
 
+/// On Windows, pnpm is a `.cmd` script and cannot be spawned directly.
+/// Use `pnpm.cmd` so the OS can resolve it without going through cmd.exe.
+fn pnpm_bin() -> &'static str {
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
+}
+
 fn main() {
     // ---------------------------------------------------------------------------
     // 1. Declare all custom cfgs so rustc's check-cfg doesn't warn about them.
@@ -139,19 +145,19 @@ fn main() {
     println!("cargo:warning=Using SvelteKit adapter: {}", svelte_adapter);
 
     // ---------------------------------------------------------------------------
-    // 9. Run `bun run build` (SvelteKit build step, adapter-aware via SVELTE_ADAPTER).
+    // 9. Run `pnpm run build` (SvelteKit build step, adapter-aware via SVELTE_ADAPTER).
     // ---------------------------------------------------------------------------
     println!(
         "cargo:warning=Building SvelteKit client (adapter={})...",
         svelte_adapter
     );
-    let build_status = Command::new("bun")
+    let build_status = Command::new(pnpm_bin())
         .arg("run")
         .arg("build")
         .env("SVELTE_ADAPTER", svelte_adapter)
         .current_dir(client_dir)
         .status()
-        .expect("Failed to run bun run build");
+        .expect("Failed to run pnpm run build");
 
     if !build_status.success() {
         panic!("Client build failed");

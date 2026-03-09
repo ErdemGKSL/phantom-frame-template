@@ -1,21 +1,16 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import type { PageData } from "./$types";
+    import { apiFetch } from "$lib/api";
 
-    let counter = $state(0);
+    let { data }: { data: PageData } = $props();
 
-    async function fetchCounter() {
-        const res = await fetch("/api/counter");
-        const data = await res.json();
-        counter = data.value;
-    }
+    // svelte-ignore state_referenced_locally
+    let counter = $state(data.counter);
 
     async function increment() {
-        const res = await fetch("/api/increment");
-        const data = await res.json();
-        counter = data.value;
+        const res = await apiFetch<{ value: number }>("/api/increment");
+        counter = res.value;
     }
-
-    onMount(fetchCounter);
 </script>
 
 <h1>Welcome to SvelteKit</h1>

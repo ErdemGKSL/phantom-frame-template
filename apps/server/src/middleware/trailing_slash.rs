@@ -45,7 +45,7 @@ where
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let path = req.uri().path();
 
-        if path.len() > 1 && path.ends_with('/') {
+        if path != "/" && path.ends_with('/') {
             // Strip trailing slash, keep query string
             let new_path = &path[..path.len() - 1];
             let new_uri = if let Some(query) = req.uri().query() {

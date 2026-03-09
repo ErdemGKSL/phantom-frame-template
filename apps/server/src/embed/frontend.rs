@@ -15,7 +15,7 @@ const APP_BINARY: &[u8] = include_bytes!("../../../client/dist/client.exe");
 #[cfg(not(target_os = "windows"))]
 const APP_BINARY: &[u8] = include_bytes!("../../../client/dist/client");
 
-pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
+pub fn run_frontend_binary(frontend_port: u16, rust_port: u16) -> Result<()> {
     // Create temp directory for executable with project name
     let project_name = env!("WORKSPACE_NAME");
     let temp_dir = std::env::temp_dir().join(project_name);
@@ -51,6 +51,7 @@ pub fn run_frontend_binary(frontend_port: u16) -> Result<()> {
         .env("PORT", frontend_port.to_string())
         .env("HOST", "127.0.0.1")
         .env("NODE_ENV", "production")
+        .env("PUBLIC_RUST_SERVER_PORT", rust_port.to_string())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()

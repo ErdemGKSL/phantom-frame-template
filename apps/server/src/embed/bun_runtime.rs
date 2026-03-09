@@ -44,7 +44,7 @@ fn strip_ansi_codes(s: &str) -> String {
 /// Production-only frontend runner when `bun_compile` is disabled.
 ///
 /// Extracts the bundled client and runs it directly with bun.
-pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
+pub fn run_frontend_bun(frontend_port: u16, rust_port: u16) -> Result<()> {
     let temp_dir = get_project_temp_dir();
     std::fs::create_dir_all(&temp_dir)
         .context("Failed to create bundle directory")?;
@@ -68,6 +68,7 @@ pub fn run_frontend_bun(frontend_port: u16) -> Result<()> {
         .env("PORT", frontend_port.to_string())
         .env("HOST", "127.0.0.1")
         .env("NODE_ENV", "production")
+        .env("PUBLIC_RUST_SERVER_PORT", rust_port.to_string())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()

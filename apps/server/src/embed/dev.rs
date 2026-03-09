@@ -70,10 +70,21 @@ const NODE_RUNNERS: &[Runner] = &[
     },
 ];
 
+/// On Windows, npm/pnpm/npx are `.cmd` wrapper scripts and cannot be spawned
+/// as plain executables. `node` ships as a native `.exe` and needs no suffix.
+#[cfg(node)]
+fn resolve_bin(program: &str) -> String {
+    if cfg!(windows) && program != "node" {
+        format!("{}.cmd", program)
+    } else {
+        program.to_string()
+    }
+}
+
 /// Check whether an executable exists in PATH by running `<program> --version`.
 #[cfg(node)]
 fn executable_in_path(program: &str) -> bool {
-    Command::new(program)
+    Command::new(resolve_bin(program))
         .arg("--version")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -89,7 +100,7 @@ fn executable_in_path(program: &str) -> bool {
 /// Spawn the Vite dev server using the appropriate package manager for the
 /// active feature (`bun` or `node`) and return the child process together
 /// with a channel that fires once Vite reports it is listening.
-pub fn run_dev_server() -> Result<(Child, mpsc::Receiver<()>)> {
+pub fn run_dev_server(rust_port: u16) -> Result<(Child, mpsc::Receiver<()>)> {
     let client_dir = std::env::current_dir()
         .context("Failed to get current directory")?
         .join("apps")
@@ -136,16 +147,17 @@ pub fn run_dev_server() -> Result<(Child, mpsc::Receiver<()>)> {
 
         let mut full_args: Vec<&str> = runner.args.to_vec();
         full_args.push("dev");
-        (runner.program, full_args, runner.label)
+        (resolve_bin(runner.program), full_args, runner.label)
     };
 
-    let mut cmd = Command::new(program);
+    let mut cmd = Command::new(&program);
     for arg in &args {
         cmd.arg(arg);
     }
 
     let mut child = cmd
         .current_dir(&client_dir)
+        .env("PUBLIC_RUST_SERVER_PORT", rust_port.to_string())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -204,8 +216,8 @@ pub struct DevServer {
 }
 
 impl DevServer {
-    pub fn start() -> Result<Self> {
-        let (child, rx) = run_dev_server()?;
+    pub fn start(rust_port: u16) -> Result<Self> {
+        let (child, rx) = run_dev_server(rust_port)?;
 
         // Block until Vite reports it is listening ("Local:" line)
         rx.recv().ok();
