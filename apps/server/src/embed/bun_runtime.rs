@@ -2,7 +2,10 @@ use anyhow::{Context, Result};
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use std::thread;
 use std::time::{Duration, Instant};
 use tracing::info;
@@ -37,26 +40,20 @@ fn strip_ansi_codes(s: &str) -> String {
     result
 }
 
-
-
-
-
 /// Production-only frontend runner when `bun_compile` is disabled.
 ///
 /// Extracts the bundled client and runs it directly with bun.
 pub fn run_frontend_bun(frontend_port: u16, rust_port: u16) -> Result<()> {
     let temp_dir = get_project_temp_dir();
-    std::fs::create_dir_all(&temp_dir)
-        .context("Failed to create bundle directory")?;
+    std::fs::create_dir_all(&temp_dir).context("Failed to create bundle directory")?;
 
     extract_client_assets(&temp_dir)
         .context("Failed to extract built client assets for bun runtime")?;
 
     let bundle_path = temp_dir.join("bundle.js");
-    
+
     info!("Extracting frontend bundle to {:?}", bundle_path);
-    let mut file = std::fs::File::create(&bundle_path)
-        .context("Failed to create bundle file")?;
+    let mut file = std::fs::File::create(&bundle_path).context("Failed to create bundle file")?;
     file.write_all(BUNDLE_JS)
         .context("Failed to write bundle")?;
     drop(file);
@@ -107,10 +104,13 @@ pub fn run_frontend_bun(frontend_port: u16, rust_port: u16) -> Result<()> {
         });
     }
 
-    info!("Waiting for frontend to be ready on port {}...", frontend_port);
+    info!(
+        "Waiting for frontend to be ready on port {}...",
+        frontend_port
+    );
     let start = Instant::now();
     let timeout = Duration::from_secs(30);
-    
+
     // Wait for either the "Listening on" log or port to be available
     while !ready.load(Ordering::SeqCst) && start.elapsed() < timeout {
         if TcpStream::connect(("127.0.0.1", frontend_port)).is_ok() {
@@ -119,11 +119,14 @@ pub fn run_frontend_bun(frontend_port: u16, rust_port: u16) -> Result<()> {
         }
         thread::sleep(Duration::from_millis(100));
     }
-    
+
     if start.elapsed() >= timeout {
-        anyhow::bail!("Frontend failed to start within {} seconds", timeout.as_secs());
+        anyhow::bail!(
+            "Frontend failed to start within {} seconds",
+            timeout.as_secs()
+        );
     }
-    
+
     info!("Frontend is ready after {:?}", start.elapsed());
 
     Ok(())

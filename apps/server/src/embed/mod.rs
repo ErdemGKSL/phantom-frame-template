@@ -38,7 +38,7 @@ pub mod static_assets;
 
 #[allow(unused)]
 #[cfg(debug_assertions)]
-pub use dev::{run_dev_server, DevServer};
+pub use dev::{DevServer, run_dev_server};
 
 #[cfg(all(not(debug_assertions), compile_frontend))]
 pub use frontend::run_frontend_binary as run_frontend;

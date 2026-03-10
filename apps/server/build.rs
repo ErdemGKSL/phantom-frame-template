@@ -4,11 +4,7 @@ use std::process::Command;
 /// On Windows, pnpm is a `.cmd` script and cannot be spawned directly.
 /// Use `pnpm.cmd` so the OS can resolve it without going through cmd.exe.
 fn pnpm_bin() -> &'static str {
-    if cfg!(windows) {
-        "pnpm.cmd"
-    } else {
-        "pnpm"
-    }
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
 }
 
 fn main() {
@@ -266,7 +262,9 @@ fn main() {
                 // Option C succeeded: a single dist/bundle.node.js was produced.
                 println!("cargo:rustc-cfg=node_bundled");
                 println!("cargo:rustc-env=NODE_BUNDLE_STRATEGY=bundled");
-                println!("cargo:warning=Node bundle complete (dist/bundle.node.js) — using bundled strategy");
+                println!(
+                    "cargo:warning=Node bundle complete (dist/bundle.node.js) — using bundled strategy"
+                );
                 save_meta(
                     &meta_file,
                     "cargo:rustc-cfg=node_bundled\ncargo:rustc-env=NODE_BUNDLE_STRATEGY=bundled\n",

@@ -1,8 +1,5 @@
 use crate::env::get_enviroment;
-use std::sync::{
-    Arc,
-    atomic::AtomicUsize,
-};
+use std::sync::{Arc, atomic::AtomicUsize};
 use tracing::info;
 use tracing_subscriber;
 
@@ -36,15 +33,15 @@ fn find_available_port() -> std::io::Result<u16> {
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
-    
+
     // Initialize tracing subscriber with fallback
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"))
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
-    
+
     let environment = get_enviroment();
     info!("Starting server in {:?} mode", environment);
 
@@ -59,7 +56,7 @@ async fn main() {
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
         .unwrap_or(3030);
-    
+
     info!("Frontend port: {}", frontend_port);
     info!("Server port: {}", port);
 

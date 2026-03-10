@@ -26,8 +26,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
 use std::thread;
 use std::time::{Duration, Instant};

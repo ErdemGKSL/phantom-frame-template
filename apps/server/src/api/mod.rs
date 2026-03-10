@@ -21,7 +21,9 @@ async fn increment_counter(Extension(state): Extension<Arc<AppState>>) -> Json<V
     let value = state.counter.fetch_add(1, Ordering::Relaxed) + 1;
 
     state.refresh_frontend.trigger_by_key_match("GET::/");
-    state.refresh_frontend.trigger_by_key_match("GET::/__data.json");
+    state
+        .refresh_frontend
+        .trigger_by_key_match("GET::/__data.json");
 
     Json(json!({ "value": value }))
 }

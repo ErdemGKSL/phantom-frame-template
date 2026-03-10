@@ -1,16 +1,16 @@
 use anyhow::{Context as _, Result as AnyhowResult};
-use rust_embed::RustEmbed;
 use axum::{
     body::Body,
     http::{Request, StatusCode},
     response::Response,
 };
+use rust_embed::RustEmbed;
 use std::fs;
-use std::path::Path;
-use tower::{Layer, Service};
 use std::future::Future;
+use std::path::Path;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use tower::{Layer, Service};
 
 #[derive(RustEmbed)]
 #[folder = "../client/build/client"]
@@ -39,7 +39,8 @@ where
 {
     type Response = Response;
     type Error = S::Error;
-    type Future = Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
+    type Future =
+        Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
@@ -47,7 +48,7 @@ where
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let path = req.uri().path().trim_start_matches('/');
-        
+
         // Try to serve from assets first
         if is_safe_asset_path(path) {
             if let Some(asset) = ClientAssets::get(path) {
@@ -57,12 +58,11 @@ where
                     .header("content-type", mime);
 
                 if path.starts_with("_app/immutable/") {
-                    response = response.header("cache-control", "public,max-age=31536000,immutable");
+                    response =
+                        response.header("cache-control", "public,max-age=31536000,immutable");
                 }
 
-                let response = response
-                    .body(Body::from(asset.data.to_vec()))
-                    .unwrap();
+                let response = response.body(Body::from(asset.data.to_vec())).unwrap();
 
                 return Box::pin(async move { Ok(response) });
             }
@@ -76,16 +76,21 @@ where
 
 pub fn extract_client_assets(output_dir: &Path) -> AnyhowResult<()> {
     let client_dir = output_dir.join("client");
-    fs::create_dir_all(&client_dir)
-        .with_context(|| format!("Failed to create client asset directory at {:?}", client_dir))?;
+    fs::create_dir_all(&client_dir).with_context(|| {
+        format!(
+            "Failed to create client asset directory at {:?}",
+            client_dir
+        )
+    })?;
 
     for asset_path in ClientAssets::iter() {
         let asset_path = asset_path.as_ref();
         let destination = client_dir.join(asset_path);
 
         if let Some(parent) = destination.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create asset parent directory at {:?}", parent))?;
+            fs::create_dir_all(parent).with_context(|| {
+                format!("Failed to create asset parent directory at {:?}", parent)
+            })?;
         }
 
         let asset = ClientAssets::get(asset_path)
