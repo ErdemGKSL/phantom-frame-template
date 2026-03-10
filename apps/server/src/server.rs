@@ -1,10 +1,10 @@
 use anyhow::Result;
 use axum::{Extension, Router};
-use phantom_frame::CreateProxyConfig;
+use phantom_frame::{CacheStrategy, CreateProxyConfig};
 use std::sync::Arc;
 use tracing::{info, instrument};
 
-use crate::{api, env::Environment, middleware::RedirectTrailingSlashLayer, AppState};
+use crate::{AppState, api, env::Environment, middleware::RedirectTrailingSlashLayer};
 
 #[instrument(skip_all, fields(port = %port, frontend_port = %frontend_port))]
 pub async fn start_server(
@@ -38,8 +38,7 @@ pub async fn start_server(
         .layer(RedirectTrailingSlashLayer);
 
     // Start server
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port))
-        .await?;
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
 
     info!("Server running on http://127.0.0.1:{}", port);
     axum::serve(listener, app).await?;
@@ -58,6 +57,7 @@ fn create_proxy_config(frontend_port: u16, environment: Environment) -> Result<C
             "DELETE *".to_string(),
             "PATCH *".to_string(),
         ])
+        .with_cache_strategy(CacheStrategy::OnlyHtml)
         .with_websocket_enabled(matches!(environment, Environment::Development));
 
     Ok(proxy_config)

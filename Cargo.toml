@@ -6,4 +6,4 @@ members = ["apps/server"]
 project_name = "phantom-frame-template"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
