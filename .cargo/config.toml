@@ -1,2 +1,2 @@
 [alias]
-dev = ["watch", "-w", "apps/server/src", "-w", "apps/database/src", "-x", "run"]
+dev = ["watch", "-w", "apps", "-i", "apps/client", "-x", "run"]
