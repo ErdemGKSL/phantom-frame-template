@@ -1,6 +1,6 @@
 use anyhow::Result;
 use axum::{Extension, Router};
-use phantom_frame::{CacheStrategy, CreateProxyConfig};
+use phantom_frame::{CacheStrategy, CreateProxyConfig, ProxyMode};
 use std::sync::Arc;
 use tracing::{info, instrument};
 
@@ -15,11 +15,11 @@ pub async fn start_server(
 ) -> Result<()> {
     info!("Initializing server");
 
-    // Create proxy once so the RefreshTrigger and the Router share the same cache.
-    let (proxy_router, refresh_frontend) =
+    // Create proxy once so the CacheHandle and the Router share the same cache.
+    let (proxy_router, cache_handle) =
         phantom_frame::create_proxy(create_proxy_config(frontend_port, environment)?);
 
-    let state = Arc::new(AppState::new(refresh_frontend));
+    let state = Arc::new(AppState::new(cache_handle));
 
     // Create Axum router with proxy
     #[cfg(not(debug_assertions))]
@@ -58,7 +58,14 @@ fn create_proxy_config(frontend_port: u16, environment: Environment) -> Result<C
             "PATCH *".to_string(),
         ])
         .with_cache_strategy(CacheStrategy::OnlyHtml)
-        .with_websocket_enabled(matches!(environment, Environment::Development));
+        .with_websocket_enabled(matches!(environment, Environment::Development))
+        // SSG mode: pre-generate the root page at startup.
+        // In development, fallthrough is enabled so Vite's live-reload still works.
+        // In production, cache misses return 404 — only pre-generated pages are served.
+        .with_proxy_mode(ProxyMode::PreGenerate {
+            paths: vec!["/".to_string()],
+            fallthrough: matches!(environment, Environment::Development),
+        });
 
     Ok(proxy_config)
 }

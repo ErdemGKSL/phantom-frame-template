@@ -11,14 +11,14 @@ mod server;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub refresh_frontend: phantom_frame::cache::RefreshTrigger,
+    pub cache_handle: phantom_frame::cache::CacheHandle,
     pub counter: Arc<AtomicUsize>,
 }
 
 impl AppState {
-    pub fn new(refresh_frontend: phantom_frame::cache::RefreshTrigger) -> Self {
+    pub fn new(cache_handle: phantom_frame::cache::CacheHandle) -> Self {
         Self {
-            refresh_frontend,
+            cache_handle,
             counter: Arc::new(AtomicUsize::new(0)),
         }
     }

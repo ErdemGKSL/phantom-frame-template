@@ -20,10 +20,14 @@ async fn get_counter(Extension(state): Extension<Arc<AppState>>) -> Json<Value> 
 async fn increment_counter(Extension(state): Extension<Arc<AppState>>) -> Json<Value> {
     let value = state.counter.fetch_add(1, Ordering::Relaxed) + 1;
 
-    state.refresh_frontend.trigger_by_key_match("GET::/");
-    state
-        .refresh_frontend
-        .trigger_by_key_match("GET::/__data.json");
+    // Re-fetch the pre-generated pages from the upstream so the cache reflects
+    // the updated counter value immediately.
+    if let Err(e) = state.cache_handle.refresh_snapshot("/").await {
+        tracing::warn!("Failed to refresh snapshot '/': {}", e);
+    }
+    if let Err(e) = state.cache_handle.refresh_snapshot("/__data.json").await {
+        tracing::warn!("Failed to refresh snapshot '/__data.json': {}", e);
+    }
 
     Json(json!({ "value": value }))
 }
